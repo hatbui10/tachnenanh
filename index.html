@@ -1,212 +1,333 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Tách nền theo vùng</title>
+<title>Tool chỉnh ảnh + tách nền</title>
+
 <style>
+
 body{
-font-family:"Segoe UI",Tahoma,Arial,sans-serif;
+margin:0;
+font-family:Segoe UI,Arial;
+background:#0f172a;
+color:#e2e8f0;
+}
+
+.title{
 text-align:center;
-
-background:linear-gradient(135deg,#1e293b,#0f172a,#020617);
-
-min-height:100vh;
-padding:40px;
-color:#e5e7eb;
-}
-
-h2{
-margin-bottom:25px;
+padding:15px;
+font-size:22px;
 font-weight:600;
-letter-spacing:1px;
-color:#f1f5f9;
 }
 
-.controls{
-background:rgba(30,41,59,0.75);
-width: 60%;
-backdrop-filter:blur(10px);
-margin: 20px auto;
-padding:22px 28px;
-border-radius:14px;
-
-box-shadow:
-0 15px 40px rgba(0,0,0,0.6);
+.app{
+display:flex;
+min-height:calc(100vh - 60px);
+max-width:1600px;
+margin:auto;
+}
 
 
+/* sidebar */
+
+.sidebar{
+width:360px;
+min-width:360px;
+background:#1e293b;
+padding:20px;
+overflow:auto;
+box-shadow:4px 0 20px rgba(0,0,0,0.4);
+
+height:fit-content;
+}
+
+label{
+display:block;
+margin-top:10px;
+font-size:13px;
 }
 
 input{
+width:100%;
+padding:6px;
+margin-top:4px;
 background:#0f172a;
-color:#e5e7eb;
-
 border:1px solid #334155;
+color:white;
 border-radius:6px;
+}
 
-padding:8px 12px;
-margin:5px;
+input[type=range]{
+padding:0;
 }
 
 button{
-padding:10px 18px;
+margin-top:10px;
+width:100%;
+padding:10px;
+background:#3b82f6;
 border:none;
-border-radius:8px;
-
-background:linear-gradient(135deg,#3b82f6,#2563eb);
+border-radius:6px;
 color:white;
-
 font-weight:600;
 cursor:pointer;
-
-transition:all .2s ease;
 }
 
 button:hover{
-transform:translateY(-2px);
-box-shadow:0 8px 18px rgba(0,0,0,0.5);
+background:#2563eb;
+}
+
+.section{
+margin-top:20px;
+font-weight:600;
+color:#cbd5f5;
+}
+
+/* canvas */
+
+.workspace{
+flex:1;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.canvasBox{
+position:relative;
+background:#020617;
+padding:30px;
+border-radius:10px;
+box-shadow:0 20px 40px rgba(0,0,0,0.7);
 }
 
 canvas{
-border-radius:12px;
-border:2px solid #334155;
+border-radius:8px;
+border:1px solid #334155;
+max-width:100%;
+height:auto;
 
-box-shadow:
-0 15px 35px rgba(0,0,0,0.7);
 }
 
 #selection{
 position:absolute;
 border:2px dashed #ef4444;
-border-radius:6px;
-
 background:rgba(239,68,68,0.15);
-
 pointer-events:none;
 }
 
+.workspace{
+flex:1;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:40px;
+}
 
+.canvasBox{
+position:relative;
+background:#020617;
+padding:30px;
+border-radius:10px;
+box-shadow:0 20px 40px rgba(0,0,0,0.7);
+
+max-width:900px;
+}
 
 
 </style>
 </head>
+
 <body>
 
-<h2>Tách nền theo vùng (kéo chuột như PowerPoint)</h2>
+<h2 class="title">Tool chỉnh ảnh + tách nền</h2>
 
-<div class="controls">
+<div class="app">
+
+<div class="sidebar">
+
+<label>Chọn ảnh</label>
 <input type="file" id="upload">
-<br><br>
 
-Mã màu cần xóa:
+<label>Mã màu cần xóa</label>
 <input type="text" id="color" value="#ffffff">
 
-Tolerance:
+<label>Tolerance</label>
 <input type="number" id="tol" value="80">
 
-<button onclick="removeBg()">Tách nền trong vùng đã chọn</button>
+<button onclick="removeBg()">Tách nền vùng chọn</button>
+
+<div class="section">Sáng</div>
+
+<label>Độ sáng</label>
+<input type="range" id="brightness" min="-100" max="100" value="0">
+
+<label>Tiếp xúc</label>
+<input type="range" id="exposure" min="-100" max="100" value="0">
+
+<label>Ngược lại</label>
+<input type="range" id="contrast" min="-100" max="100" value="0">
+
+<label>Nổi bật</label>
+<input type="range" id="highlights" min="-100" max="100" value="0">
+
+<label>Bóng</label>
+<input type="range" id="shadows" min="-100" max="100" value="0">
+
+<label>Mờ nét</label>
+<input type="range" id="blur" min="0" max="10" value="0">
+
+<div class="section">Màu sắc</div>
+
+<label>Bão hòa</label>
+<input type="range" id="saturation" min="-100" max="100" value="0">
+
+<label>Độ ấm</label>
+<input type="range" id="warmth" min="-100" max="100" value="0">
+
+<label>Sắc thái</label>
+<input type="range" id="tint" min="-100" max="100" value="0">
+
+<label>Độ sắc nét</label>
+<input type="range" id="sharpness" min="0" max="5" value="0">
+
 </div>
 
-<div style="position:relative;display:inline-block">
+<div class="workspace">
+
+<div class="canvasBox">
+
 <canvas id="canvas"></canvas>
 <div id="selection"></div>
+
+</div>
+
+</div>
+
 </div>
 
 <script>
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const upload = document.getElementById("upload");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const upload=document.getElementById("upload");
 
-let img = new Image();
+let img=new Image();
 
 let startX,startY,endX,endY;
 let selecting=false;
 
-const selectionBox = document.getElementById("selection");
+const selectionBox=document.getElementById("selection");
 
-upload.onchange = e=>{
-let file = e.target.files[0];
-let reader = new FileReader();
+upload.onchange=e=>{
 
-reader.onload = function(ev){
-img.onload = function(){
-canvas.width = img.width;
-canvas.height = img.height;
-ctx.drawImage(img,0,0);
+let file=e.target.files[0];
+let reader=new FileReader();
+
+reader.onload=function(ev){
+
+img.onload=function(){
+
+let maxWidth = 900;
+
+let ratio = img.width > maxWidth ? maxWidth / img.width : 1;
+
+canvas.width = img.width * ratio;
+canvas.height = img.height * ratio;
+
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
 }
-img.src = ev.target.result;
+
+
+img.src=ev.target.result;
+
 }
 
 reader.readAsDataURL(file);
+
 };
 
+/* vùng chọn */
+
 canvas.addEventListener("mousedown",e=>{
+
 selecting=true;
 
-const rect = canvas.getBoundingClientRect();
-startX = e.clientX - rect.left;
-startY = e.clientY - rect.top;
+const rect=canvas.getBoundingClientRect();
 
-selectionBox.style.left = startX+"px";
-selectionBox.style.top = startY+"px";
-selectionBox.style.width = "0px";
-selectionBox.style.height = "0px";
+startX=e.clientX-rect.left;
+startY=e.clientY-rect.top;
+
+selectionBox.style.left=startX+"px";
+selectionBox.style.top=startY+"px";
+selectionBox.style.width="0px";
+selectionBox.style.height="0px";
+
 });
 
 canvas.addEventListener("mousemove",e=>{
+
 if(!selecting) return;
 
-const rect = canvas.getBoundingClientRect();
-endX = e.clientX - rect.left;
-endY = e.clientY - rect.top;
+const rect=canvas.getBoundingClientRect();
 
-selectionBox.style.left = Math.min(startX,endX)+"px";
-selectionBox.style.top = Math.min(startY,endY)+"px";
+endX=e.clientX-rect.left;
+endY=e.clientY-rect.top;
 
-selectionBox.style.width = Math.abs(endX-startX)+"px";
-selectionBox.style.height = Math.abs(endY-startY)+"px";
+selectionBox.style.left=Math.min(startX,endX)+"px";
+selectionBox.style.top=Math.min(startY,endY)+"px";
+
+selectionBox.style.width=Math.abs(endX-startX)+"px";
+selectionBox.style.height=Math.abs(endY-startY)+"px";
+
 });
 
 canvas.addEventListener("mouseup",()=>{
+
 selecting=false;
+
 });
+
+/* tách nền */
 
 function hexToRgb(hex){
 
-hex = hex.replace("#","");
+hex=hex.replace("#","");
 
-let r = parseInt(hex.substring(0,2),16);
-let g = parseInt(hex.substring(2,4),16);
-let b = parseInt(hex.substring(4,6),16);
+let r=parseInt(hex.substring(0,2),16);
+let g=parseInt(hex.substring(2,4),16);
+let b=parseInt(hex.substring(4,6),16);
 
 return {r,g,b};
+
 }
 
 function removeBg(){
 
-let tol = parseInt(document.getElementById("tol").value);
-let hex = document.getElementById("color").value;
+let tol=parseInt(document.getElementById("tol").value);
+let hex=document.getElementById("color").value;
 
-let rgb = hexToRgb(hex);
+let rgb=hexToRgb(hex);
 
-let x = Math.min(startX,endX);
-let y = Math.min(startY,endY);
-let w = Math.abs(endX-startX);
-let h = Math.abs(endY-startY);
+let x=Math.min(startX,endX);
+let y=Math.min(startY,endY);
+let w=Math.abs(endX-startX);
+let h=Math.abs(endY-startY);
 
-let imgData = ctx.getImageData(x,y,w,h);
-let data = imgData.data;
+let imgData=ctx.getImageData(x,y,w,h);
+let data=imgData.data;
 
 for(let i=0;i<data.length;i+=4){
 
-let r = data[i];
-let g = data[i+1];
-let b = data[i+2];
+let r=data[i];
+let g=data[i+1];
+let b=data[i+2];
 
 if(
-Math.abs(r-rgb.r) < tol &&
-Math.abs(g-rgb.g) < tol &&
-Math.abs(b-rgb.b) < tol
+Math.abs(r-rgb.r)<tol &&
+Math.abs(g-rgb.g)<tol &&
+Math.abs(b-rgb.b)<tol
 ){
 data[i+3]=0;
 }
@@ -214,9 +335,38 @@ data[i+3]=0;
 }
 
 ctx.putImageData(imgData,x,y);
+
+}
+
+/* chỉnh màu */
+
+const sliders=document.querySelectorAll("input[type=range]");
+
+sliders.forEach(s=>{
+
+s.addEventListener("input",applyAdjustments);
+
+});
+
+function applyAdjustments(){
+
+let brightness=document.getElementById("brightness").value;
+let contrast=document.getElementById("contrast").value;
+let saturation=document.getElementById("saturation").value;
+let blur=document.getElementById("blur").value;
+
+ctx.filter=
+`brightness(${100+parseInt(brightness)}%)
+contrast(${100+parseInt(contrast)}%)
+saturate(${100+parseInt(saturation)}%)
+blur(${blur}px)`;
+
+ctx.drawImage(img,0,0);
+
 }
 
 </script>
 
 </body>
 </html>
+
