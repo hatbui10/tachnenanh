@@ -1,71 +1,201 @@
-```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Tách nền ảnh</title>
+<title>Tách nền theo vùng</title>
 <style>
 body{
-font-family: Arial;
+font-family:"Segoe UI",Tahoma,Arial,sans-serif;
 text-align:center;
-background:#f5f5f5;
+
+background:linear-gradient(135deg,#1e293b,#0f172a,#020617);
+
+min-height:100vh;
 padding:40px;
+color:#e5e7eb;
 }
 
-canvas{
-border:1px solid #ccc;
-margin-top:20px;
-max-width:90%;
+h2{
+margin-bottom:25px;
+font-weight:600;
+letter-spacing:1px;
+color:#f1f5f9;
+}
+
+.controls{
+background:rgba(30,41,59,0.75);
+width: 60%;
+backdrop-filter:blur(10px);
+margin: 20px auto;
+padding:22px 28px;
+border-radius:14px;
+
+box-shadow:
+0 15px 40px rgba(0,0,0,0.6);
+
+
+}
+
+input{
+background:#0f172a;
+color:#e5e7eb;
+
+border:1px solid #334155;
+border-radius:6px;
+
+padding:8px 12px;
+margin:5px;
 }
 
 button{
-padding:10px 20px;
-margin:10px;
-font-size:16px;
+padding:10px 18px;
+border:none;
+border-radius:8px;
+
+background:linear-gradient(135deg,#3b82f6,#2563eb);
+color:white;
+
+font-weight:600;
 cursor:pointer;
+
+transition:all .2s ease;
 }
+
+button:hover{
+transform:translateY(-2px);
+box-shadow:0 8px 18px rgba(0,0,0,0.5);
+}
+
+canvas{
+border-radius:12px;
+border:2px solid #334155;
+
+box-shadow:
+0 15px 35px rgba(0,0,0,0.7);
+}
+
+#selection{
+position:absolute;
+border:2px dashed #ef4444;
+border-radius:6px;
+
+background:rgba(239,68,68,0.15);
+
+pointer-events:none;
+}
+
+
+
+
 </style>
 </head>
-
 <body>
 
-<h2>Tách nền trắng khỏi ảnh</h2>
+<h2>Tách nền theo vùng (kéo chuột như PowerPoint)</h2>
 
-<input type="file" id="upload" accept="image/*">
-<br>
+<div class="controls">
+<input type="file" id="upload">
+<br><br>
 
-<button onclick="removeBackground()">Tách nền</button>
-<button onclick="download()">Tải ảnh PNG</button>
+Mã màu cần xóa:
+<input type="text" id="color" value="#ffffff">
 
-<br>
+Tolerance:
+<input type="number" id="tol" value="80">
+
+<button onclick="removeBg()">Tách nền trong vùng đã chọn</button>
+</div>
+
+<div style="position:relative;display:inline-block">
 <canvas id="canvas"></canvas>
+<div id="selection"></div>
+</div>
 
 <script>
 
-let img = new Image();
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const upload = document.getElementById("upload");
 
-document.getElementById("upload").addEventListener("change", function(e){
+let img = new Image();
+
+let startX,startY,endX,endY;
+let selecting=false;
+
+const selectionBox = document.getElementById("selection");
+
+upload.onchange = e=>{
 let file = e.target.files[0];
 let reader = new FileReader();
 
-reader.onload = function(event){
+reader.onload = function(ev){
 img.onload = function(){
 canvas.width = img.width;
 canvas.height = img.height;
 ctx.drawImage(img,0,0);
 }
-img.src = event.target.result;
+img.src = ev.target.result;
 }
 
 reader.readAsDataURL(file);
+};
+
+canvas.addEventListener("mousedown",e=>{
+selecting=true;
+
+const rect = canvas.getBoundingClientRect();
+startX = e.clientX - rect.left;
+startY = e.clientY - rect.top;
+
+selectionBox.style.left = startX+"px";
+selectionBox.style.top = startY+"px";
+selectionBox.style.width = "0px";
+selectionBox.style.height = "0px";
 });
 
-function removeBackground(){
+canvas.addEventListener("mousemove",e=>{
+if(!selecting) return;
 
-let imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
-let data = imageData.data;
+const rect = canvas.getBoundingClientRect();
+endX = e.clientX - rect.left;
+endY = e.clientY - rect.top;
+
+selectionBox.style.left = Math.min(startX,endX)+"px";
+selectionBox.style.top = Math.min(startY,endY)+"px";
+
+selectionBox.style.width = Math.abs(endX-startX)+"px";
+selectionBox.style.height = Math.abs(endY-startY)+"px";
+});
+
+canvas.addEventListener("mouseup",()=>{
+selecting=false;
+});
+
+function hexToRgb(hex){
+
+hex = hex.replace("#","");
+
+let r = parseInt(hex.substring(0,2),16);
+let g = parseInt(hex.substring(2,4),16);
+let b = parseInt(hex.substring(4,6),16);
+
+return {r,g,b};
+}
+
+function removeBg(){
+
+let tol = parseInt(document.getElementById("tol").value);
+let hex = document.getElementById("color").value;
+
+let rgb = hexToRgb(hex);
+
+let x = Math.min(startX,endX);
+let y = Math.min(startY,endY);
+let w = Math.abs(endX-startX);
+let h = Math.abs(endY-startY);
+
+let imgData = ctx.getImageData(x,y,w,h);
+let data = imgData.data;
 
 for(let i=0;i<data.length;i+=4){
 
@@ -73,27 +203,20 @@ let r = data[i];
 let g = data[i+1];
 let b = data[i+2];
 
-if(r>230 && g>230 && b>230){
+if(
+Math.abs(r-rgb.r) < tol &&
+Math.abs(g-rgb.g) < tol &&
+Math.abs(b-rgb.b) < tol
+){
 data[i+3]=0;
 }
 
 }
 
-ctx.putImageData(imageData,0,0);
-
-}
-
-function download(){
-
-let link=document.createElement("a");
-link.download="image_no_bg.png";
-link.href=canvas.toDataURL("image/png");
-link.click();
-
+ctx.putImageData(imgData,x,y);
 }
 
 </script>
 
 </body>
 </html>
-```
