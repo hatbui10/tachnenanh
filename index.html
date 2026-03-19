@@ -1,85 +1,51 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Tool tách nền vùng chọn + xuất ảnh</title>
+<title>Tách nền vùng chọn rõ nét</title>
+
 <style>
-
-
-body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background:#0f172a;
-    color:#e2e8f0;
-}
-
-
+body{margin:0;font-family:Arial;background:#0f172a;color:#e2e8f0;}
 h2{text-align:center;margin-top:10px;}
 .app{display:flex; max-width:1200px; margin:20px auto;}
-.sidebar{
-    width:15%;
-    background:#1e293b;
-    padding:20px;
-    border-radius:10px;
-    margin-right:20px;
-}
-
-
+.sidebar{width:15%;background:#1e293b;padding:20px;border-radius:10px;margin:20px;}
 .sidebar label{margin-top:10px; display:block;}
-.sidebar input, .sidebar button{
-    width:90%;
-    margin-top:5px;
-    padding:8px;
-    border-radius:6px;
-    border:none;
-    font-size:14px;
-}
-
-
-
-.sidebar button{
-    background:#3b82f6; color:white;
-    cursor:pointer;
-    margin-top:12px;
-     width:90%;
-}
-
-
+.sidebar input, .sidebar button{width:85%; margin-top:5px; padding:8px; border-radius:6px; border:none; font-size:14px;}
+.sidebar button{background:#3b82f6; color:white; cursor:pointer;width:95%; margin-top:12px;}
 .workspace{flex:1; display:flex; justify-content:center; align-items:flex-start;}
 .canvasBox{position:relative; background:#020617; padding:10px; border-radius:10px;}
 canvas{border:1px solid #334155; border-radius:6px;}
-#selection{
-    position:absolute;
-    border:2px dashed #ef4444;
-    background:rgba(239,68,68,0.2);
-    display:none;
-}
+#selection{position:absolute; border:2px dashed #ef4444; background:rgba(239,68,68,0.2); display:none;}
 </style>
+
 </head>
 <body>
 
-<h2>Tool tách nền vùng chọn</h2>
+<h2>Tách nền vùng chọn rõ nét</h2>
+
 <div class="app">
-    <div class="sidebar">
-        <label>Upload ảnh</label>
-        <input type="file" id="upload">
+<div class="sidebar">
+<label>Upload ảnh</label>
+<input type="file" id="upload">
 
-        <label>Màu cần xóa (hex)</label>
-        <input type="text" id="color" value="#ffffff">
 
-        <label>Tolerance</label>
-        <input type="number" id="tol" value="80">
 
-        <button onclick="removeBg()">Tách nền vùng chọn</button>
-        <button onclick="exportSelection()">Xuất vùng chọn</button>
-    </div>
+<label>Màu cần xóa (hex)</label>
+<input type="text" id="color" value="#ffffff">
 
-    <div class="workspace">
-        <div class="canvasBox">
-            <canvas id="canvas"></canvas>
-            <div id="selection"></div>
-        </div>
-    </div>
+<label>Tolerance</label>
+<input type="number" id="tol" value="30">
+
+<button onclick="removeBg()">Tách nền vùng chọn</button>
+<button onclick="exportSelection()">Xuất vùng chọn</button>
+</div>
+
+<div class="workspace">
+<div class="canvasBox">
+<canvas id="canvas"></canvas>
+<div id="selection"></div>
+</div>
+</div>
 </div>
 
 <script>
@@ -89,46 +55,65 @@ const ctx = canvas.getContext("2d");
 const selection = document.getElementById("selection");
 
 let img = new Image();
-let startX,startY,endX,endY;
-let selecting = false;
+let startX, startY, endX, endY, selecting=false;
+let originalImageData = null;
 
+// LOAD ẢNH (FIX DPI)
 upload.onchange = e=>{
     let file = e.target.files[0];
+    if(!file) return;
+
     let reader = new FileReader();
     reader.onload = ev=>{
         img.onload = ()=>{
-            canvas.width = img.width;
-            canvas.height = img.height;
+            const ratio = window.devicePixelRatio || 1;
+
+            canvas.width = img.width * ratio;
+            canvas.height = img.height * ratio;
+
+            canvas.style.width = img.width + "px";
+            canvas.style.height = img.height + "px";
+
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+
             ctx.drawImage(img,0,0);
+
+            originalImageData = ctx.getImageData(0,0,canvas.width,canvas.height);
         }
         img.src = ev.target.result;
     }
     reader.readAsDataURL(file);
 }
 
-// Vẽ vùng chọn
+// CHỌN VÙNG
 canvas.addEventListener("mousedown", e=>{
     selecting=true;
-    const rect=canvas.getBoundingClientRect();
-    startX = e.clientX - rect.left;
-    startY = e.clientY - rect.top;
-    selection.style.left = startX+"px";
-    selection.style.top = startY+"px";
-    selection.style.width = "0px";
-    selection.style.height = "0px";
+    const rect = canvas.getBoundingClientRect();
+    startX = (e.clientX - rect.left) * (canvas.width / canvas.clientWidth);
+    startY = (e.clientY - rect.top) * (canvas.height / canvas.clientHeight);
+
     selection.style.display="block";
 });
+
 canvas.addEventListener("mousemove", e=>{
     if(!selecting) return;
-    const rect=canvas.getBoundingClientRect();
-    endX = e.clientX - rect.left;
-    endY = e.clientY - rect.top;
-    selection.style.left = Math.min(startX,endX)+"px";
-    selection.style.top = Math.min(startY,endY)+"px";
-    selection.style.width = Math.abs(endX-startX)+"px";
-    selection.style.height = Math.abs(endY-startY)+"px";
+
+    const rect = canvas.getBoundingClientRect();
+    let mx = e.clientX - rect.left;
+    let my = e.clientY - rect.top;
+
+    selection.style.left = Math.min(startX/(canvas.width/canvas.clientWidth), mx) + "px";
+    selection.style.top = Math.min(startY/(canvas.height/canvas.clientHeight), my) + "px";
+    selection.style.width = Math.abs(mx - startX/(canvas.width/canvas.clientWidth)) + "px";
+    selection.style.height = Math.abs(my - startY/(canvas.height/canvas.clientHeight)) + "px";
+
+    endX = mx * (canvas.width / canvas.clientWidth);
+    endY = my * (canvas.height / canvas.clientHeight);
 });
-canvas.addEventListener("mouseup", e=>{ selecting=false; });
+
+canvas.addEventListener("mouseup", ()=> selecting=false);
 
 // HEX → RGB
 function hexToRgb(hex){
@@ -140,11 +125,15 @@ function hexToRgb(hex){
     };
 }
 
-// Tách nền
+// TÁCH NỀN (MỀM VIỀN)
 function removeBg(){
+    if(!originalImageData) return alert("Chưa upload ảnh!");
     if(startX===undefined) return alert("Chưa chọn vùng!");
-    const tol=parseInt(document.getElementById("tol").value);
-    const rgb=hexToRgb(document.getElementById("color").value);
+
+    const tol = parseInt(document.getElementById("tol").value);
+    const rgb = hexToRgb(document.getElementById("color").value);
+
+    ctx.putImageData(originalImageData,0,0);
 
     let x = Math.min(startX,endX);
     let y = Math.min(startY,endY);
@@ -153,42 +142,69 @@ function removeBg(){
 
     let imgData = ctx.getImageData(x,y,w,h);
     let data = imgData.data;
-    for(let i=0;i<data.length;i+=4){
-        if(Math.abs(data[i]-rgb.r)<tol &&
-           Math.abs(data[i+1]-rgb.g)<tol &&
-           Math.abs(data[i+2]-rgb.b)<tol){
-               data[i+3]=0;
-           }
+
+   for(let i=0;i<data.length;i+=4){
+    let dr = data[i]-rgb.r;
+    let dg = data[i+1]-rgb.g;
+    let db = data[i+2]-rgb.b;
+
+    let dist = Math.sqrt(dr*dr + dg*dg + db*db);
+
+    if(dist < tol){
+        data[i+3] = 0; // xóa luôn nền
+    } 
+    else if(dist < tol * 1.5){
+        // vùng rìa → làm mềm
+        let alpha = (dist - tol) / tol;
+        data[i+3] = data[i+3] * alpha;
     }
+}
     ctx.putImageData(imgData,x,y);
 }
 
-// Xuất vùng chọn
+
+
+// XUẤT ẢNH NÉT
 function exportSelection(){
     if(startX===undefined) return alert("Chưa chọn vùng!");
+
     let x = Math.min(startX,endX);
     let y = Math.min(startY,endY);
     let w = Math.abs(endX-startX);
     let h = Math.abs(endY-startY);
 
-    if(w===0 || h===0) return alert("Vùng chọn không hợp lệ!");
-
-    // Tạo canvas tạm
     const tempCanvas = document.createElement("canvas");
     const tCtx = tempCanvas.getContext("2d");
+
     tempCanvas.width = w;
     tempCanvas.height = h;
 
-    // Lấy ảnh từ vùng chọn
-    const imgData = ctx.getImageData(x,y,w,h);
-    tCtx.putImageData(imgData,0,0);
+    const temp = document.createElement("canvas");
+    const tempCtx = temp.getContext("2d");
 
-    // Xuất PNG
+    temp.width = w;
+    temp.height = h;
+
+    tempCtx.putImageData(ctx.getImageData(x,y,w,h),0,0);
+
+    tCtx.imageSmoothingEnabled = true;
+    tCtx.imageSmoothingQuality = "high";
+    tCtx.filter = "contrast(110%)";
+
+    tCtx.drawImage(temp,0,0);
+   
+    
+
     const link = document.createElement("a");
     link.download = "selection.png";
-    link.href = tempCanvas.toDataURL("image/png");
+    link.href = tempCanvas.toDataURL("image/png",1.0);
     link.click();
 }
+
+
+
+
+
 </script>
 
 </body>
