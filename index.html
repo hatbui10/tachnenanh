@@ -1,847 +1,195 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Tool chỉnh ảnh + tách nền</title>
-
+<title>Tool tách nền vùng chọn + xuất ảnh</title>
 <style>
 
+
 body{
-margin:0;
-font-family:Segoe UI,Arial;
-background:#0f172a;
-color:#e2e8f0;
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#0f172a;
+    color:#e2e8f0;
 }
 
-.title{
-text-align:center;
-padding:10px;
-font-size:22px;
-font-weight:600;
-}
 
-.app{
-display:flex;
-min-height:calc(100vh - 60px);
-max-width:1600px;
-margin:auto;
-}
-
-/* sidebar */
-
+h2{text-align:center;margin-top:10px;}
+.app{display:flex; max-width:1200px; margin:20px auto;}
 .sidebar{
-width:360px;
-background:#1e293b;
-padding:20px;
-overflow:auto;
-box-shadow:4px 0 20px rgba(0,0,0,0.4);
-margin:30px;
-height:fit-content;
-border:2px solid #334155;
-border-radius:10px;
+    width:15%;
+    background:#1e293b;
+    padding:20px;
+    border-radius:10px;
+    margin-right:20px;
 }
 
-label{
-display:block;
-margin-top:10px;
-font-size:13px;
-}
 
-input{
-width:100%;
-padding:6px;
-margin-top:4px;
-background:#0f172a;
-border:1px solid #334155;
-color:white;
-border-radius:6px;
-}
-
-input[type=range]{ padding:0; }
-
-button{
-    margin-top:12px;
-    width:100%;
-    padding:12px;
-    font-size:14px;
-    font-weight:600;
-    letter-spacing:0.3px;
-
-    color:white;
-    background:linear-gradient(135deg,#3b82f6,#2563eb);
-
+.sidebar label{margin-top:10px; display:block;}
+.sidebar input, .sidebar button{
+    width:90%;
+    margin-top:5px;
+    padding:8px;
+    border-radius:6px;
     border:none;
-    border-radius:8px;
+    font-size:14px;
+}
 
+
+
+.sidebar button{
+    background:#3b82f6; color:white;
     cursor:pointer;
-    transition:all 0.25s ease;
-
-    box-shadow:0 6px 16px rgba(0,0,0,0.35);
-}
-
-/* hover */
-
-button:hover{
-    transform:translateY(-2px);
-    box-shadow:0 10px 24px rgba(0,0,0,0.5);
-    background:linear-gradient(135deg,#4f93ff,#1d4ed8);
-}
-
-/* click */
-
-button:active{
-    transform:scale(0.96);
-    box-shadow:0 4px 10px rgba(0,0,0,0.4);
-}
-
-/* focus */
-
-button:focus{
-    outline:none;
-    box-shadow:0 0 0 2px #60a5fa;
+    margin-top:12px;
+     width:90%;
 }
 
 
-
-
-.section{
-margin-top:20px;
-font-weight:600;
-color:#cbd5f5;
-}
-
-/* canvas */
-
-.workspace{
-flex:1;
-display:flex;
-justify-content:center;
-align-items:flex-start;
-margin-top:20px;
-}
-
-.canvasBox{
-position:relative;
-background:#020617;
-padding:30px;
-border-radius:10px;
-box-shadow:0 20px 40px rgba(0,0,0,0.7);
-display:flex;
-justify-content:center;
-max-width:900px;
-}
-
-canvas{
-border-radius:8px;
-border:1px solid #334155;
-}
-
+.workspace{flex:1; display:flex; justify-content:center; align-items:flex-start;}
+.canvasBox{position:relative; background:#020617; padding:10px; border-radius:10px;}
+canvas{border:1px solid #334155; border-radius:6px;}
 #selection{
-position:absolute;
-border:2px dashed #ef4444;
-background:rgba(239,68,68,0.15);
-display:none;
+    position:absolute;
+    border:2px dashed #ef4444;
+    background:rgba(239,68,68,0.2);
+    display:none;
 }
-
-
-
-.handle{
-position:absolute;
-width:10px;
-height:10px;
-background:#ef4444;
-border-radius:8px;
-pointer-events:auto;
-
-}
-
-
-.tl{top:-5px;left:-5px;cursor:nwse-resize;}
-.tm{top:-5px;left:50%;transform:translateX(-50%);cursor:ns-resize;}
-.tr{top:-5px;right:-5px;cursor:nesw-resize;}
-
-.ml{top:50%;left:-5px;transform:translateY(-50%);cursor:ew-resize;}
-.center{top:50%;left:50%;transform:translate(-50%,-50%);cursor:move;background:#22c55e;}
-.mr{top:50%;right:-5px;transform:translateY(-50%);cursor:ew-resize;}
-
-.bl{bottom:-5px;left:-5px;cursor:nesw-resize;}
-.bm{bottom:-5px;left:50%;transform:translateX(-50%);cursor:ns-resize;}
-.br{bottom:-5px;right:-5px;cursor:nwse-resize;}
-
-
-.toolIcon{
-position:absolute;
-top:10px;
-right:10px;
-
-width:32px;
-height:32px;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-background:#1e293b;
-border:1px solid #334155;
-border-radius:6px;
-
-cursor:pointer;
-font-size:18px;
-
-user-select:none;
-
-transition:0.2s;
-}
-
-.toolIcon:hover{
-background:#334155;
-}
-
 </style>
 </head>
-
 <body>
 
-<h2 class="title">Tool chỉnh ảnh + tách nền</h2>
-
+<h2>Tool tách nền vùng chọn</h2>
 <div class="app">
+    <div class="sidebar">
+        <label>Upload ảnh</label>
+        <input type="file" id="upload">
 
+        <label>Màu cần xóa (hex)</label>
+        <input type="text" id="color" value="#ffffff">
 
+        <label>Tolerance</label>
+        <input type="number" id="tol" value="80">
 
-<div class="sidebar">
-<button onclick="undo()">Hoàn tác</button>
+        <button onclick="removeBg()">Tách nền vùng chọn</button>
+        <button onclick="exportSelection()">Xuất vùng chọn</button>
+    </div>
 
-<label>Chọn ảnh</label>
-<input type="file" id="upload">
-
-<label>Mã màu cần xóa</label>
-<input type="text" id="color" value="#ffffff">
-
-<label>Tolerance</label>
-<input type="number" id="tol" value="80">
-
-<button onclick="removeBg()">Tách nền vùng chọn</button>
-
-<div class="section">Sáng</div>
-
-<label>Độ sáng</label>
-<input type="range" id="brightness" min="-100" max="100" value="0">
-
-<label>Tiếp xúc</label>
-<input type="range" id="exposure" min="-100" max="100" value="0">
-
-<label>Ngược lại</label>
-<input type="range" id="contrast" min="-100" max="100" value="0">
-
-<label>Nổi bật</label>
-<input type="range" id="highlights" min="-100" max="100" value="0">
-
-<label>Bóng</label>
-<input type="range" id="shadows" min="-100" max="100" value="0">
-
-<label>Mờ nét</label>
-<input type="range" id="blur" min="0" max="10" value="0">
-
-
-<div class="section">Màu sắc</div>
-
-<label>Bão hòa</label>
-<input type="range" id="saturation" min="-100" max="100" value="0">
-
-<label>Độ ấm</label>
-<input type="range" id="warmth" min="-100" max="100" value="0">
-
-<label>Sắc thái</label>
-<input type="range" id="tint" min="-100" max="100" value="0">
-
-<label>Độ sắc nét</label>
-<input type="range" id="sharpness" min="0" max="5" value="0">
-</div>
-
-
-
-
-<div class="workspace">
-
-<div class="canvasBox">
-<div class="toolIcon" id="toggleBox">⬛</div>
-
-<canvas id="canvas"></canvas>
-
-
-<div id="selection">
-
-<div class="handle tl"></div>
-<div class="handle tm"></div>
-<div class="handle tr"></div>
-
-<div class="handle ml"></div>
-<div class="handle center"></div>
-<div class="handle mr"></div>
-
-<div class="handle bl"></div>
-<div class="handle bm"></div>
-<div class="handle br"></div>
-
-</div>
-
-
-</div>
-
-</div>
-
+    <div class="workspace">
+        <div class="canvasBox">
+            <canvas id="canvas"></canvas>
+            <div id="selection"></div>
+        </div>
+    </div>
 </div>
 
 <script>
-
-const brightness = document.getElementById("brightness");
-const contrast = document.getElementById("contrast");
-const saturation = document.getElementById("saturation");
-const blur = document.getElementById("blur");
-
-const exposure = document.getElementById("exposure");
-const highlights = document.getElementById("highlights");
-const shadows = document.getElementById("shadows");
-
-const warmth = document.getElementById("warmth");
-const tint = document.getElementById("tint");
-const sharpness = document.getElementById("sharpness");
-
+const upload = document.getElementById("upload");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const upload = document.getElementById("upload");
+const selection = document.getElementById("selection");
 
 let img = new Image();
-let ratio = 1;
-let maxWidth = 600;
-
 let startX,startY,endX,endY;
-let selecting=false;
+let selecting = false;
 
-let zoom = 1;
-let offsetX = 0;
-let offsetY = 0;
+upload.onchange = e=>{
+    let file = e.target.files[0];
+    let reader = new FileReader();
+    reader.onload = ev=>{
+        img.onload = ()=>{
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img,0,0);
+        }
+        img.src = ev.target.result;
+    }
+    reader.readAsDataURL(file);
+}
 
-let resizing=false;
-
-let activeHandle=null;
-let history=[];
-let dragging = false;
-
-const toggleBox = document.getElementById("toggleBox");
-
-
-
-
-const selectionBox=document.getElementById("selection");
-
-
-selectionBox.querySelectorAll(".handle").forEach(h=>{
-
-h.addEventListener("mousedown",e=>{
-
-e.stopPropagation();
-
-activeHandle = h.classList[1];
-resizing = true;
-
+// Vẽ vùng chọn
+canvas.addEventListener("mousedown", e=>{
+    selecting=true;
+    const rect=canvas.getBoundingClientRect();
+    startX = e.clientX - rect.left;
+    startY = e.clientY - rect.top;
+    selection.style.left = startX+"px";
+    selection.style.top = startY+"px";
+    selection.style.width = "0px";
+    selection.style.height = "0px";
+    selection.style.display="block";
 });
-
+canvas.addEventListener("mousemove", e=>{
+    if(!selecting) return;
+    const rect=canvas.getBoundingClientRect();
+    endX = e.clientX - rect.left;
+    endY = e.clientY - rect.top;
+    selection.style.left = Math.min(startX,endX)+"px";
+    selection.style.top = Math.min(startY,endY)+"px";
+    selection.style.width = Math.abs(endX-startX)+"px";
+    selection.style.height = Math.abs(endY-startY)+"px";
 });
+canvas.addEventListener("mouseup", e=>{ selecting=false; });
 
-let boxVisible = false;
-
-toggleBox.onclick = function(){
-
-boxVisible = !boxVisible;
-
-if(boxVisible){
-selectionBox.style.display = "block";
-}else{
-selectionBox.style.display = "none";
-}
-
-};
-
-
-
-
-function updateSelection(){
-
-selectionBox.style.left=Math.min(startX,endX)+"px";
-selectionBox.style.top=Math.min(startY,endY)+"px";
-
-selectionBox.style.width=Math.abs(endX-startX)+"px";
-selectionBox.style.height=Math.abs(endY-startY)+"px";
-
-}
-
-
-
-
-
-/* LOAD ẢNH */
-
-upload.onchange=e=>{
-
-let file=e.target.files[0];
-let reader=new FileReader();
-
-reader.onload=function(ev){
-
-img.onload=function(){
-
-ratio = img.width > maxWidth ? maxWidth / img.width : 1;
-
-canvas.width = img.width * ratio;
-canvas.height = img.height * ratio;
-
-drawImage();
-saveHistory();
-
-}
-
-img.src=ev.target.result;
-
-}
-
-reader.readAsDataURL(file);
-
-};
-
-/* VẼ ẢNH */
-
-function drawImage(){
-
-
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
-let brightnessVal = brightness.value;
-let contrastVal = contrast.value;
-let saturationVal = saturation.value;
-let blurVal = blur.value;
-
-
-ctx.filter =
-`brightness(${100+parseInt(brightnessVal)}%)
-contrast(${100+parseInt(contrastVal)}%)
-saturate(${100+parseInt(saturationVal)}%)
-blur(${blurVal}px)`;
-
-
-
-let w = img.width * ratio * zoom;
-let h = img.height * ratio * zoom;
-
-ctx.drawImage(img, offsetX, offsetY, w, h);
-
-applyAdvancedAdjustments();
-
-}
-
-
-function saveHistory(){
-
-history.push({
-
-image: canvas.toDataURL(),
-
-brightness: brightness.value,
-contrast: contrast.value,
-saturation: saturation.value,
-blur: blur.value,
-
-exposure: exposure.value,
-highlights: highlights.value,
-shadows: shadows.value,
-
-warmth: warmth.value,
-tint: tint.value,
-sharpness: sharpness.value
-
-});
-
-if(history.length>100){
-history.shift();
-}
-
-}
-
-
-
-/* PIXEL PROCESSING */
-
-function applyAdvancedAdjustments(){
-
-let exposureVal = exposure.value/100;
-let highlightsVal = highlights.value/100;
-let shadowsVal = shadows.value/100;
-let warmthVal = warmth.value;
-let tintVal = tint.value;
-let sharpnessVal = sharpness.value;
-
-
-
-let imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
-let data = imgData.data;
-
-for(let i=0;i<data.length;i+=4){
-
-let r=data[i];
-let g=data[i+1];
-let b=data[i+2];
-
-let avg=(r+g+b)/3;
-
-/* exposure */
-
-
-
-r = r * (1 + exposureVal);
-g = g * (1 + exposureVal);
-b = b * (1 + exposureVal);
-
-
-/* highlights */
-
-if(avg > 180){
-r += highlightsVal * 50;
-g += highlightsVal * 50;
-b += highlightsVal * 50;
-}
-
-/* shadows */
-
-if(avg < 80){
-r += shadowsVal * 50;
-g += shadowsVal * 50;
-b += shadowsVal * 50;
-}
-
-/* warmth */
-
-r += warmthVal * 0.5;
-b -= warmthVal * 0.5;
-
-/* tint */
-
-g += tintVal * 0.5;
-
-/* clamp */
-
-data[i]=Math.max(0,Math.min(255,r));
-data[i+1]=Math.max(0,Math.min(255,g));
-data[i+2]=Math.max(0,Math.min(255,b));
-
-}
-
-ctx.putImageData(imgData,0,0);
-
-/* sharpness */
-
-if(sharpnessVal > 0){
-sharpen(sharpnessVal);
-}
-
-
-}
-
-/* SHARPEN */
-
-function sharpen(amount){
-
-let w=canvas.width;
-let h=canvas.height;
-
-let imgData=ctx.getImageData(0,0,w,h);
-let data=imgData.data;
-
-let copy=new Uint8ClampedArray(data);
-
-for(let y=1;y<h-1;y++){
-for(let x=1;x<w-1;x++){
-
-let i=(y*w+x)*4;
-
-for(let c=0;c<3;c++){
-
-let val=
-copy[i+c]*(1+4*amount)
--copy[i-4+c]*amount
--copy[i+4+c]*amount
--copy[i-w*4+c]*amount
--copy[i+w*4+c]*amount;
-
-data[i+c]=Math.max(0,Math.min(255,val));
-
-}
-
-}
-
-}
-
-ctx.putImageData(imgData,0,0);
-
-}
-
-
-
-
-
-
-
-/* ZOOM */
-
-canvas.addEventListener("wheel",e=>{
-
-e.preventDefault();
-
-if(e.deltaY<0){
-zoom*=1.1;
-}else{
-zoom*=0.9;
-}
-
-zoom=Math.max(0.2,Math.min(zoom,10));
-
-drawImage();
-
-});
-
-/* DRAG */
-
-
-
-
-
-canvas.addEventListener("mousemove", e => {
-
-const rect = canvas.getBoundingClientRect();
-let mx = e.clientX - rect.left;
-let my = e.clientY - rect.top;
-
-if(resizing){
-
-/* 4 góc */
-
-if(activeHandle==="tl"){
-startX = mx;
-startY = my;
-}
-
-if(activeHandle==="tr"){
-endX = mx;
-startY = my;
-}
-
-if(activeHandle==="bl"){
-startX = mx;
-endY = my;
-}
-
-if(activeHandle==="br"){
-endX = mx;
-endY = my;
-}
-
-/* 4 cạnh */
-
-if(activeHandle==="tm"){
-startY = my;
-}
-
-if(activeHandle==="bm"){
-endY = my;
-}
-
-if(activeHandle==="ml"){
-startX = mx;
-}
-
-if(activeHandle==="mr"){
-endX = mx;
-}
-
-/* kéo cả khung */
-
-if(activeHandle==="center"){
-
-let w = endX - startX;
-let h = endY - startY;
-
-startX = mx - w/2;
-startY = my - h/2;
-
-endX = startX + w;
-endY = startY + h;
-
-}
-
-updateSelection();
-return;
-
-}
-
-
-if(selecting){
-   endX = mx;
-   endY = my;
-   updateSelection();
-}
-
-
-});
-
-
-
-
-
-
-/* SLIDER */
-
-document.querySelectorAll("input[type=range]").forEach(s=>{
-
-
-
-s.addEventListener("input",()=>{
-drawImage();
-});
-
-s.addEventListener("change",()=>{
-saveHistory();
-});
-
-});
-
-/* VÙNG CHỌN */
-
-canvas.addEventListener("mousedown",e=>{
-
-selecting=true;
-
-const rect=canvas.getBoundingClientRect();
-
-startX=e.clientX-rect.left;
-startY=e.clientY-rect.top;
-
-selectionBox.style.left=startX+"px";
-selectionBox.style.top=startY+"px";
-
-});
-
-
-
-
-canvas.addEventListener("mouseup",()=>{
-
-selecting=false;
-resizing=false;
-activeHandle=null;
-dragging=false;
-
-});
-
-
-
-
-
-
-/* HEX → RGB */
-
+// HEX → RGB
 function hexToRgb(hex){
-
-hex=hex.replace("#","");
-
-return{
-r:parseInt(hex.substring(0,2),16),
-g:parseInt(hex.substring(2,4),16),
-b:parseInt(hex.substring(4,6),16)
-};
-
+    hex=hex.replace("#","");
+    return{
+        r:parseInt(hex.substring(0,2),16),
+        g:parseInt(hex.substring(2,4),16),
+        b:parseInt(hex.substring(4,6),16)
+    };
 }
 
-/* TÁCH NỀN */
-
+// Tách nền
 function removeBg(){
-saveHistory();
-if(startX===undefined) return;
+    if(startX===undefined) return alert("Chưa chọn vùng!");
+    const tol=parseInt(document.getElementById("tol").value);
+    const rgb=hexToRgb(document.getElementById("color").value);
 
-let tol=parseInt(document.getElementById("tol").value);
-let rgb=hexToRgb(document.getElementById("color").value);
+    let x = Math.min(startX,endX);
+    let y = Math.min(startY,endY);
+    let w = Math.abs(endX-startX);
+    let h = Math.abs(endY-startY);
 
-let x=Math.min(startX,endX);
-let y=Math.min(startY,endY);
-let w=Math.abs(endX-startX);
-let h=Math.abs(endY-startY);
-
-let imgData=ctx.getImageData(x,y,w,h);
-let data=imgData.data;
-
-for(let i=0;i<data.length;i+=4){
-
-let r=data[i];
-let g=data[i+1];
-let b=data[i+2];
-
-if(
-Math.abs(r-rgb.r)<tol &&
-Math.abs(g-rgb.g)<tol &&
-Math.abs(b-rgb.b)<tol
-){
-data[i+3]=0;
+    let imgData = ctx.getImageData(x,y,w,h);
+    let data = imgData.data;
+    for(let i=0;i<data.length;i+=4){
+        if(Math.abs(data[i]-rgb.r)<tol &&
+           Math.abs(data[i+1]-rgb.g)<tol &&
+           Math.abs(data[i+2]-rgb.b)<tol){
+               data[i+3]=0;
+           }
+    }
+    ctx.putImageData(imgData,x,y);
 }
 
+// Xuất vùng chọn
+function exportSelection(){
+    if(startX===undefined) return alert("Chưa chọn vùng!");
+    let x = Math.min(startX,endX);
+    let y = Math.min(startY,endY);
+    let w = Math.abs(endX-startX);
+    let h = Math.abs(endY-startY);
+
+    if(w===0 || h===0) return alert("Vùng chọn không hợp lệ!");
+
+    // Tạo canvas tạm
+    const tempCanvas = document.createElement("canvas");
+    const tCtx = tempCanvas.getContext("2d");
+    tempCanvas.width = w;
+    tempCanvas.height = h;
+
+    // Lấy ảnh từ vùng chọn
+    const imgData = ctx.getImageData(x,y,w,h);
+    tCtx.putImageData(imgData,0,0);
+
+    // Xuất PNG
+    const link = document.createElement("a");
+    link.download = "selection.png";
+    link.href = tempCanvas.toDataURL("image/png");
+    link.click();
 }
-
-ctx.putImageData(imgData,x,y);
-
-}
-
-
-
-
-function undo(){
-
-history.pop();
-
-if(history.length===0) return;
-
-let state = history[history.length-1];
-
-let imgData = new Image();
-
-imgData.onload=function(){
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-ctx.drawImage(imgData,0,0);
-
-}
-
-imgData.src = state.image;
-
-/* khôi phục slider */
-
-brightness.value = state.brightness;
-contrast.value = state.contrast;
-saturation.value = state.saturation;
-blur.value = state.blur;
-
-exposure.value = state.exposure;
-highlights.value = state.highlights;
-shadows.value = state.shadows;
-
-warmth.value = state.warmth;
-tint.value = state.tint;
-sharpness.value = state.sharpness;
-
-}
-
-
-
 </script>
 
 </body>
 </html>
-
-
