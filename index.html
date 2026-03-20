@@ -14,7 +14,17 @@ h2{text-align:center;margin-top:10px;}
 .sidebar button{background:#3b82f6; color:white; cursor:pointer;width:95%; margin-top:12px;}
 .workspace{flex:1; display:flex; justify-content:center; align-items:flex-start;}
 .canvasBox{position:relative; background:#020617; padding:10px; border-radius:10px;}
-canvas{border:1px solid #334155; border-radius:6px;}
+
+canvas {
+  max-width: 600px;   /* hiển thị vừa màn hình */
+  max-height: 600px;
+  width: auto;
+  height: auto;
+  border:1px solid #334155;
+  border-radius:6px;
+}
+
+
 #selection{position:absolute; border:2px dashed #ef4444; background:rgba(239,68,68,0.2); display:none;}
 </style>
 
@@ -86,6 +96,9 @@ upload.onchange = e=>{
     }
     reader.readAsDataURL(file);
 }
+
+
+
 
 // CHỌN VÙNG
 canvas.addEventListener("mousedown", e=>{
